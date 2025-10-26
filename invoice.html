@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>فاتورة نقل بالعبور | مؤسسة الهاجري</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- ✅ مكتبات حديثة -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+body {
+  font-family: "Tajawal", sans-serif;
+  background: radial-gradient(circle at top left, #f8faff, #e8f0ff);
+  padding: 40px;
+}
+.invoice {
+  background: white;
+  max-width: 850px;
+  margin: auto;
+  border-radius: 20px;
+  padding: 40px 60px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  border: 8px double #d4af37;
+  position: relative;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.header img {
+  width: 100px;
+}
+h1 {
+  color: #007BFF;
+  text-align: center;
+  flex: 1;
+  font-size: 30px;
+  margin: 0;
+}
+.sub {
+  text-align: center;
+  font-weight: bold;
+  font-size: 22px;
+  color: #333;
+  border-bottom: 3px double #d4af37;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: center;
+}
+th {
+  background-color: #007BFF;
+  color: white;
+}
+.total-container {
+  text-align: left;
+  margin-top: 20px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+.total-container span {
+  color: #007BFF;
+}
+.footer {
+  text-align: center;
+  margin-top: 30px;
+  border-top: 2px dashed #d4af37;
+  padding-top: 15px;
+  position: relative;
+}
+.footer p {
+  margin: 4px;
+}
+.footer img {
+  margin-top: 10px;
+  width: 100px;
+}
+.signature {
+  text-align: center;
+  font-weight: bold;
+  color: #444;
+  margin-top: 15px;
+}
+button {
+  display: block;
+  margin: 25px auto;
+  padding: 12px 25px;
+  background: linear-gradient(135deg, #28a745, #1d8030);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
+button:hover {
+  transform: scale(1.05);
+  transition: 0.3s;
+}
+.watermark {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 60px;
+  color: rgba(0, 0, 0, 0.05);
+  font-weight: bold;
+  pointer-events: none;
+}
+.stamp {
+  position: absolute;
+  bottom: 1px;
+  right: 700px;
+  width: 150px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="invoice" class="invoice">
+  <div class="header">
+    <img src="F.jpg">
+    <h1>فاتورة نقل بالعبور</h1>
+    <img src="f.jpg">
+  </div>
+
+  <div class="sub">مؤسسة الهاجري للتخليص الجمركي</div>
+
+  <table>
+    <tr><th>اسم المنفذ</th><td id="port"></td></tr>
+    <tr><th>رقم البيان</th><td id="declaration"></td></tr>
+    <tr><th>التاريخ</th><td id="date"></td></tr>
+    <tr><th>الرخصة</th><td>4828</td></tr>
+  </table>
+
+  <table style="margin-top:25px;">
+    <thead>
+      <tr>
+        <th>عدد السيارات</th>
+        <th>رقم اللوحة</th>
+        <th>اسم السائق</th>
+        <th>بلد المنشأ</th>
+        <th>نوع الرخصة</th>
+        <th>المبلغ (ريال)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td id="cars"></td>
+        <td id="plate"></td>
+        <td id="driver"></td>
+        <td>أجنبي</td>
+        <td id="licenseType"></td>
+        <td id="amount"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="total-container">
+    المبلغ الكلي: <span id="totalAmount"></span> ريال
+  </div>
+
+  <div class="footer">
+    <p>📞 الجوال: 00966549490090</p>
+    <p>🏢 مؤسسة الهاجري للتخليص الجمركي</p>
+    <div class="signature">_</div>
+    <img src="sor.png" alt="ختم مؤسسة الهاجري" class="stamp">
+  </div>
+
+  <div class="watermark">الهاجري</div>
+</div>
+
+<button onclick="generatePDF()">🖨️ طباعة / حفظ PDF</button>
+
+<script>
+window.onload = () => {
+  const data = JSON.parse(localStorage.getItem("invoiceData"));
+  if (!data) return;
+  document.getElementById("port").textContent = data.port;
+  document.getElementById("declaration").textContent = data.declaration;
+  document.getElementById("date").textContent = data.date;
+  document.getElementById("cars").textContent = data.cars;
+  document.getElementById("plate").textContent = data.plate;
+  document.getElementById("driver").textContent = data.driver;
+  document.getElementById("licenseType").textContent = data.licenseType;
+  document.getElementById("amount").textContent = data.amount;
+  document.getElementById("totalAmount").textContent = data.amount;
+};
+
+async function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("p", "pt", "a4");
+
+  const invoice = document.getElementById("invoice");
+
+  // ✅ تقليل الدقة لتقليل حجم الملف
+  const canvas = await html2canvas(invoice, {
+    scale: 1.2, // بدل 2 → أصغر حجم
+    useCORS: true
+  });
+
+  // ✅ تحويل الصورة إلى جودة منخفضة
+  const imgData = canvas.toDataURL("image/jpeg", 0.6); // JPEG + ضغط 60%
+  const imgWidth = 550;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+  // ✅ تقليل الهوامش
+  pdf.addImage(imgData, "JPEG", 25, 15, imgWidth, imgHeight);
+
+  pdf.save("فاتورة_الهاجري.pdf");
+}
+</script>
+
+</body>
+</html>
